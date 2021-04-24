@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Util;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +14,7 @@ namespace Application.Services.ActivityHandling
     public class Update
     {
 
-        public class Command : IRequest
+        public class Command : IRequest<Result<Unit>>
         {
             public Guid ActivityId { get; set; }
             public string Title { get; set; }
@@ -33,20 +34,20 @@ namespace Application.Services.ActivityHandling
             }
         }
 
-        public class Handler : IRequestHandler<Command>
+        public class Handler : IRequestHandler<Command, Result<Unit>>
         {
             private readonly ApplicationDbContext _context;
             private readonly IUserAccessor _userAccessor;
-            private readonly IPhotoAccessor _photoAccessor;
+            // private readonly IPhotoAccessor _photoAccessor;
 
-            public Handler(ApplicationDbContext context, IUserAccessor userAccessor, IPhotoAccessor photoAccessor)
+            public Handler(ApplicationDbContext context, IUserAccessor userAccessor)
             {
                 _context = context;
                 _userAccessor = userAccessor;
-                _photoAccessor = photoAccessor;
+                // _photoAccessor = photoAccessor;
             }
 
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
                 var activity = await _context.Activities.FindAsync(request.ActivityId);
                 if (activity == null)
@@ -54,22 +55,22 @@ namespace Application.Services.ActivityHandling
                     throw new ArgumentNullException("activity", "activity was not found");
                 }
 
-                if (activity.AppUserId != _userAccessor.GetUserId())
-                {
-                    throw new Exception("This user account does not have permission to delete the activity");
-                }
+                // if (activity.AppUserId != _userAccessor.GetUserId())
+                // {
+                //     throw new Exception("This user account does not have permission to delete the activity");
+                // }
 
-                // this part has to change later
-                if (request.ImageFile != null)
-                {
-                    var image = await _context.UserPhotos.SingleOrDefaultAsync(c => c.ActivityId == request.ActivityId);
-                    if (image != null)
-                    {
-                        _photoAccessor.DeletePhoto(image.Id);
-                        var uploadResult = _photoAccessor.UpdatePhoto(request.ImageFile, image.Id);
-                    }
+                // // this part has to change later
+                // if (request.ImageFile != null)
+                // {
+                //     var image = await _context.UserPhotos.SingleOrDefaultAsync(c => c.ActivityId == request.ActivityId);
+                //     if (image != null)
+                //     {
+                //         _photoAccessor.DeletePhoto(image.Id);
+                //         var uploadResult = _photoAccessor.UpdatePhoto(request.ImageFile, image.Id);
+                //     }
 
-                }
+                // }
 
                 activity.Title = request.Title ?? activity.Title;
                 activity.HoldingDate = request.HoldingDate;
@@ -80,9 +81,9 @@ namespace Application.Services.ActivityHandling
 
                 var success = await _context.SaveChangesAsync() > 0;
 
-                if (success) return Unit.Value;
+                if (success) return Result<Unit>.Success(Unit.Value);
 
-                throw new Exception("Problem saving changes");
+                return Result<Unit>.Failure("Problem saving changes.");
             }
         }
     }

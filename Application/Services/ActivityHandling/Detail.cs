@@ -1,4 +1,5 @@
-﻿using Application.ViewModels.ActivityDto;
+﻿using Application.Util;
+using Application.ViewModels.ActivityDto;
 using AutoMapper;
 using Domain.Entities;
 using MediatR;
@@ -12,13 +13,13 @@ namespace Application.Services.ActivityHandling
     public class Detail
     {
 
-        public class Query : IRequest<ActivityItem>
+        public class Query : IRequest<Result<ActivityItem>>
         {
             public Guid Id { get; set; }
 
         }
 
-        public class Handler : IRequestHandler<Query, ActivityItem>
+        public class Handler : IRequestHandler<Query, Result<ActivityItem>>
         {
             private readonly ApplicationDbContext _context;
             private readonly IMapper _mapper;
@@ -28,16 +29,17 @@ namespace Application.Services.ActivityHandling
                 _context = context;
             }
 
-            public async Task<ActivityItem> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<ActivityItem>> Handle(Query request, CancellationToken cancellationToken)
             {
 
                 var activity = await _context.Activities.FindAsync(request.Id);
                 if (activity == null)
                 {
-                    throw new ArgumentNullException("activity", "activity was not found");
+                    return Result<ActivityItem>.Failure("The activity was not found.");
                 }
 
-                return _mapper.Map<Activity, ActivityItem>(activity);
+                var value = _mapper.Map<Activity, ActivityItem>(activity);
+                return Result<ActivityItem>.Success(value);
             }
         }
     }

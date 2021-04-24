@@ -1,6 +1,8 @@
 ﻿using Application.Interfaces;
+using Domain.Identity;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,9 +30,9 @@ namespace Application.Services.UserHandling
 
         public class Handler : IRequestHandler<Command>
         {
-            private readonly IApplicationUserManager _userManager;
+            private readonly UserManager<AppUser> _userManager;
 
-            public Handler(IApplicationUserManager userManager)
+            public Handler(UserManager<AppUser> userManager)
             {
                 _userManager = userManager;
             }

@@ -27,7 +27,11 @@ namespace Application.Security
         private readonly SymmetricSecurityKey _key;
         private readonly ISecurityService _securityService;
         private BearerTokensOptions _bearerTokensOptions;
-        public TokenFactoryService(IConfiguration config, IOptions<SiteSettings> siteSettings, ISecurityService securityService)
+        public TokenFactoryService()
+        {
+
+        }
+        public TokenFactoryService(IOptions<SiteSettings> siteSettings, ISecurityService securityService)
         {
             _bearerTokensOptions = siteSettings.Value.BearerTokensOptions;
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_bearerTokensOptions.Key));
@@ -119,16 +123,19 @@ namespace Application.Security
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString(), ClaimValueTypes.String, _bearerTokensOptions.Issuer),
                 new Claim(ClaimTypes.Name, user.UserName, ClaimValueTypes.String, _bearerTokensOptions.Issuer),
                 new Claim("DisplayName", user.DisplayName, ClaimValueTypes.String, _bearerTokensOptions.Issuer),
+                new Claim(ClaimTypes.Email, user.Email, ClaimValueTypes.String, _bearerTokensOptions.Issuer),
                 // to invalidate the cookie
-                new Claim(ClaimTypes.SerialNumber, user.SerialNumber, ClaimValueTypes.String, _bearerTokensOptions.Issuer),
+                //new Claim(ClaimTypes.SerialNumber, user.SerialNumber, ClaimValueTypes.String, _bearerTokensOptions.Issuer),
                 // custom data
-                new Claim(ClaimTypes.UserData, user.Id.ToString(), ClaimValueTypes.String, _bearerTokensOptions.Issuer)
+                //new Claim(ClaimTypes.UserData, user.Id.ToString(), ClaimValueTypes.String, _bearerTokensOptions.Issuer)
             };
 
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_bearerTokensOptions.Key));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            //token sign our token by the server
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
             var now = DateTime.UtcNow;
+            // to describe our token, like when it's going to be expired
             var token = new JwtSecurityToken(
                 issuer: _bearerTokensOptions.Issuer,
                 audience: _bearerTokensOptions.Audience,

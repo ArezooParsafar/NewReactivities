@@ -3,6 +3,7 @@ using Application.ViewModels.UserDto;
 using Domain.Identity;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Persistence.Context;
 using System;
 using System.Collections.Generic;
@@ -32,16 +33,16 @@ namespace Application.Services.UserHandling
                 RuleFor(x => x.DisplayName).NotEmpty();
                 RuleFor(x => x.Username).NotEmpty();
                 RuleFor(x => x.Email).NotEmpty().EmailAddress();
-                RuleFor(x => x.Password);
+                RuleFor(x => x.Password).NotEmpty().Matches("(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{4,8}$").WithMessage("Password must be complex");
             }
         }
 
         public class Handler : IRequestHandler<Command, UserItem>
         {
-            private readonly IApplicationUserManager _userManager;
+            private readonly UserManager<AppUser> _userManager;
             private readonly ITokenFactoryService _tokenFactoryService;
 
-            public Handler(IApplicationUserManager userManager, ITokenFactoryService tokenFactoryService)
+            public Handler(UserManager<AppUser> userManager, ITokenFactoryService tokenFactoryService)
             {
                 _userManager = userManager;
                 _tokenFactoryService = tokenFactoryService;
@@ -51,13 +52,13 @@ namespace Application.Services.UserHandling
             {
 
                 var user = await _userManager.FindByEmailAsync(request.Email);
-                if (user != null)
+                if (user != null && string.IsNullOrEmpty(request.Email))
                 {
                     throw new Exception("Email already exists.");
                 }
 
                 user = await _userManager.FindByNameAsync(request.Username);
-                if (user != null)
+                if (user != null && string.IsNullOrEmpty(request.Username))
                 {
                     throw new Exception("Username already exists.");
                 }
@@ -70,6 +71,7 @@ namespace Application.Services.UserHandling
                     UserName = request.Username,
                     IsActive = true,
                     IsPublicProfile = request.IsPublicProfile,
+
                 };
 
                 var result = await _userManager.CreateAsync(appuser, request.Password);
@@ -78,13 +80,11 @@ namespace Application.Services.UserHandling
                     var token = _tokenFactoryService.CreateJwtTokens(user);
                     return new UserItem
                     {
-                        DisplayName = request.DisplayName
-                       ,
-                        RefreshToken = token.RefreshToken
-                       ,
-                        Token = token.AccessToken
-                       ,
-                        Username = request.Username
+                        DisplayName = request.DisplayName,
+                        RefreshToken = token.RefreshToken,
+                        Token = token.AccessToken,
+                        Username = request.Username,
+                        Email = request.Email
 
                     };
                 }

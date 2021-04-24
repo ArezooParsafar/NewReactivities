@@ -1,9 +1,11 @@
 ﻿using Application.Interfaces;
 using Application.ViewModels.UserDto;
 using Domain.Enums;
+using Domain.Identity;
 using Domain.Settings;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Persistence.Context;
 using System;
@@ -35,15 +37,15 @@ namespace Application.Services.UserHandling
 
         public class Handler : IRequestHandler<Query, UserItem>
         {
-            private readonly IApplicationUserManager _userManager;
-            private readonly IApplicationSignInManager _signInManager;
+            private readonly UserManager<AppUser> _userManager;
+            private readonly SignInManager<AppUser> _signInManager;
             private readonly IOptions<SiteSettings> _siteSettings;
             private readonly ITokenFactoryService _tokenFactory;
             private readonly ITokenStoreService _tokenStoreService;
             private readonly ApplicationDbContext _context;
 
-            public Handler(IApplicationUserManager userManager
-                , IApplicationSignInManager signInManager
+            public Handler(UserManager<AppUser> userManager
+                , SignInManager<AppUser> signInManager
                 , IOptions<SiteSettings> siteSettings
                 , ITokenFactoryService tokenFactory
                 , ITokenStoreService tokenStoreService
@@ -77,29 +79,23 @@ namespace Application.Services.UserHandling
                     throw new Exception("Please check your email and confirm the sent link.");
                 }
 
-                var result = await _signInManager.PasswordSignInAsync(
+                var result = await _signInManager.CheckPasswordSignInAsync(
                                         user,
                                         request.Password,
-                                        request.RememberMe,
-                                        lockoutOnFailure: true);
+                                        request.RememberMe
+                                       );
                 if (result.Succeeded)
                 {
                     var token = _tokenFactory.CreateJwtTokens(user);
-                    await _tokenStoreService.AddUserTokenAsync(user, token.RefreshTokenSerial, token.AccessToken, null);
-                    var success = await _context.SaveChangesAsync() > 0;
-
-                    if (success)
+                    return new UserItem
                     {
-                        return new UserItem
-                        {
-                            DisplayName = user.DisplayName,
-                            Token = token.AccessToken,
-                            RefreshToken = token.RefreshToken,
-                            Username = user.UserName,
-                            ProfileImage = user.UserPhotos.FirstOrDefault(c => c.ImageType == ImageType.Profile)?.Path,
-                            HeaderImage = user.UserPhotos.FirstOrDefault(c => c.ImageType == ImageType.Header)?.Path
-                        };
-                    }
+                        DisplayName = user.DisplayName,
+                        Token = token.AccessToken,
+                        RefreshToken = token.RefreshToken,
+                        Username = user.UserName,
+                        ProfileImage = null,//user.UserPhotos.FirstOrDefault(c => c.ImageType == ImageType.Profile)?.Path,
+                        HeaderImage = null,//user.UserPhotos.FirstOrDefault(c => c.ImageType == ImageType.Header)?.Path
+                    };
 
                 }
                 if (result.IsLockedOut)

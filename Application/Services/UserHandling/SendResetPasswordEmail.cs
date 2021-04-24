@@ -1,6 +1,8 @@
 ﻿using Application.Interfaces;
+using Domain.Identity;
 using Domain.Settings;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
@@ -19,11 +21,11 @@ namespace Application.Services.UserHandling
 
         public class Handler : IRequestHandler<Command>
         {
-            private readonly IApplicationUserManager _userManager;
-            private readonly IEmailSender _emailSender;
+             private readonly UserManager<AppUser> _userManager;
+                      private readonly IEmailSender _emailSender;
             private readonly IOptions<SiteSettings> _siteSettings;
 
-            public Handler(IApplicationUserManager userManager, IEmailSender emailSender, IOptions<SiteSettings> siteSettings)
+            public Handler(UserManager<AppUser> userManager, IEmailSender emailSender, IOptions<SiteSettings> siteSettings)
             {
                 _userManager = userManager;
                 _emailSender = emailSender;

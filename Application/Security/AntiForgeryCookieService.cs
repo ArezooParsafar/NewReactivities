@@ -1,6 +1,6 @@
 ﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Antiforgery;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+//using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
@@ -28,16 +28,16 @@ namespace Application.Security
 
         public void RegenerateAntiForgeryCookies(IEnumerable<Claim> claims)
         {
-            var httpContext = _contextAccessor.HttpContext;
-            httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme));
-            var tokens = _antiforgery.GetAndStoreTokens(httpContext);
-            httpContext.Response.Cookies.Append(
-                  key: XsrfTokenKey,
-                  value: tokens.RequestToken,
-                  options: new CookieOptions
-                  {
-                      HttpOnly = false // Now JavaScript is able to read the cookie
-                  });
+            // var httpContext = _contextAccessor.HttpContext;
+            // httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, JwtBearerDefaults.AuthenticationScheme));
+            // var tokens = _antiforgery.GetAndStoreTokens(httpContext);
+            // httpContext.Response.Cookies.Append(
+            //       key: XsrfTokenKey,
+            //       value: tokens.RequestToken,
+            //       options: new CookieOptions
+            //       {
+            //           HttpOnly = false // Now JavaScript is able to read the cookie
+            //       });
         }
 
         public void DeleteAntiForgeryCookies()

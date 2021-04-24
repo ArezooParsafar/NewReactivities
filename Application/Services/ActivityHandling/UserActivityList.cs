@@ -1,4 +1,5 @@
-﻿using Application.ViewModels.ActivityDto;
+﻿using Application.Util;
+using Application.ViewModels.ActivityDto;
 using AutoMapper;
 using Domain.Entities;
 using MediatR;
@@ -15,13 +16,13 @@ namespace Application.Services.ActivityHandling
     public class UserActivityList
     {
 
-        public class Query : IRequest<List<ActivityItem>>
+        public class Query : IRequest<Result<List<ActivityItem>>>
         {
             public string Predicate { get; set; }
             public string UserName { get; set; }
         }
 
-        public class Handler : IRequestHandler<Query, List<ActivityItem>>
+        public class Handler : IRequestHandler<Query, Result<List<ActivityItem>>>
         {
             private readonly ApplicationDbContext _context;
             private readonly IMapper _mapper;
@@ -31,17 +32,14 @@ namespace Application.Services.ActivityHandling
                 _context = context;
             }
 
-            public async Task<List<ActivityItem>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<List<ActivityItem>>> Handle(Query request, CancellationToken cancellationToken)
             {
                 var userId = await _context.Users
                 .Where(c => c.UserName == request.UserName)
                 .Select(x => x.Id).FirstOrDefaultAsync();
 
-                if (string.IsNullOrEmpty(userId))
-                {
-                    throw new Exception("The user was not found.");
-                }
-
+                if (userId == null)
+                    return Result<List<ActivityItem>>.Failure("The user was not found.");
 
                 var queryable = _context.Attendees
                     .Include(x => x.Activity)
@@ -64,8 +62,8 @@ namespace Application.Services.ActivityHandling
                 }
 
                 var activities = await queryable.ToListAsync();
-                return _mapper.Map<List<Activity>, List<ActivityItem>>(activities);
-
+                var value = _mapper.Map<List<Activity>, List<ActivityItem>>(activities);
+                return Result<List<ActivityItem>>.Success(value);
             }
         }
     }

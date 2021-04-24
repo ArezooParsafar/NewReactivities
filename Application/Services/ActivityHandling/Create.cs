@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Util;
 using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
@@ -15,7 +16,7 @@ namespace Application.Services.ActivityHandling
     public class Create
     {
 
-        public class Command : IRequest
+        public class Command : IRequest<Result<Unit>>
         {
             public string Title { get; set; }
             public string Description { get; set; }
@@ -38,7 +39,7 @@ namespace Application.Services.ActivityHandling
             }
         }
 
-        public class Handler : IRequestHandler<Command>
+        public class Handler : IRequestHandler<Command, Result<Unit>>
         {
             private readonly ApplicationDbContext _context;
             private readonly IUserAccessor _userAccessor;
@@ -51,7 +52,7 @@ namespace Application.Services.ActivityHandling
                 _photoAccessor = photoAccessor;
             }
 
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
 
                 var photoUploadResult = _photoAccessor.AddPhoto(request.ImageFile);
@@ -87,9 +88,9 @@ namespace Application.Services.ActivityHandling
                 _context.Activities.Add(activity);
                 var success = await _context.SaveChangesAsync() > 0;
 
-                if (success) return Unit.Value;
+                if (success) return Result<Unit>.Success(Unit.Value);
 
-                throw new Exception("Problem saving changes");
+                return Result<Unit>.Failure("Problem saving changes.");
             }
         }
     }

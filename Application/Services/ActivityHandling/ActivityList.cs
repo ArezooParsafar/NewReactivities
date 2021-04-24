@@ -22,7 +22,7 @@ namespace Application.Services.ActivityHandling
         }
 
 
-        public class Query : IRequest<ActivitiesEnvelope>
+        public class Query : IRequest<Result<ActivitiesEnvelope>>
         {
             public Query(Pagination pagination, DateTime? startDate, string venue, string city)
             {
@@ -38,7 +38,7 @@ namespace Application.Services.ActivityHandling
             public string City { get; }
         }
 
-        public class Handler : IRequestHandler<Query, ActivitiesEnvelope>
+        public class Handler : IRequestHandler<Query, Result<ActivitiesEnvelope>>
         {
             private readonly ApplicationDbContext _context;
             private readonly IMapper _mapper;
@@ -49,7 +49,7 @@ namespace Application.Services.ActivityHandling
                 _mapper = mapper;
             }
 
-            public async Task<ActivitiesEnvelope> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<Result<ActivitiesEnvelope>> Handle(Query request, CancellationToken cancellationToken)
             {
                 var queryable = _context.Activities
                     .Include(c => c.Category)
@@ -77,12 +77,12 @@ namespace Application.Services.ActivityHandling
                   .Take(request.Pagination.Limit ?? 3)
                 .ToListAsync();
 
-                return new ActivitiesEnvelope
+                var value = new ActivitiesEnvelope
                 {
                     ActivityItems = _mapper.Map<List<Activity>, List<ActivityItem>>(activities),
                     TotalCount = queryable.Count()
                 };
-
+                return Result<ActivitiesEnvelope>.Success(value);
             }
         }
 

@@ -12,13 +12,13 @@ namespace API.IocConfig
         public static void AddCustomIdentityServices(this IServiceCollection services)
         {
             var siteSettings = services.GetSiteSettings();
-            services.AddIdentityOptions(siteSettings);
-            services.AddConfiguredDbContext(siteSettings);
             services.AddCustomServices();
-            services.AddCustomJwtBearer();
+            services.AddIdentityServices(siteSettings);
+            services.AddCustomJwtBearer(siteSettings);
+            services.AddConfiguredDbContext(siteSettings);
             services.AddApplicationServices();
             services.AddCustomCors();
-            
+
         }
     }
 }

@@ -1,22 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Application.Services.ActivityHandling;
-using Application.Services.AttendHandling;
-using Application.Services.CommentHandling;
 using Application.Util;
 using Application.ViewModels.ActivityDto;
-using Application.ViewModels.CommentDto;
-using Domain.Entities;
+using Application.ViewModels.Common;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
-
+using static Application.Services.ActivityHandling.ActivityList;
 
 namespace API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("Activity")]
     [ApiController]
     public class Activity : BaseController
 
@@ -25,47 +21,53 @@ namespace API.Controllers
 
         // GET: api/<Activity>
         [HttpGet]
-        public async Task<ActionResult<ActivityList.ActivitiesEnvelope>> List(int? limit, int? offset, DateTime? startDate, string venue, string city)
+        public async Task<IActionResult> List(int? limit, int? offset, DateTime? startDate, string venue, string city)
         {
-            var data = await Mediator.Send(new ActivityList.Query(new Pagination(limit, offset), startDate, venue, city));
-            return data;
+            var result = await Mediator.Send(new ActivityList.Query(new Pagination(limit, offset), startDate, venue, city));
+            return ProcessResult<ActivitiesEnvelope>(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ActivityItem>> Details(Guid id)
+        public async Task<ActionResult> Details(Guid id)
         {
-            return await Mediator.Send(new Detail.Query { Id = id });
+            var result = await Mediator.Send(new Detail.Query { Id = id });
+            return ProcessResult(result);
         }
 
         [HttpGet("{username}/Attendees/{predicate}")]
-        public async Task<ActionResult<List<ActivityItem>>> UserActivities(string username, string predicate)
+        public async Task<ActionResult> UserActivities(string username, string predicate)
         {
-            return await Mediator.Send(new UserActivityList.Query { UserName = username, Predicate = predicate });
+            var result = await Mediator.Send(new UserActivityList.Query { UserName = username, Predicate = predicate });
+            return ProcessResult(result);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Unit>> Create(Create.Command command)
+        public async Task<IActionResult> Create(Create.Command command)
         {
-            return await Mediator.Send(command);
+            var result = await Mediator.Send(command);
+            return ProcessResult(result);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<Unit>> Edit(Update.Command command, Guid id)
+        public async Task<IActionResult> Edit(Update.Command command, Guid id)
         {
             command.ActivityId = id;
-            return await Mediator.Send(command);
+            var result = await Mediator.Send(command);
+            return ProcessResult(result);
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Unit>> Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            return await Mediator.Send(new Delete.Command { ActivityId = id });
+            var result = await Mediator.Send(new Delete.Command { ActivityId = id });
+            return ProcessResult(result);
         }
 
-        [HttpGet("/categories")]
-        public async Task<ActionResult<List<ActivityCategory>>> ActivityCategories()
+        [HttpGet("categories")]
+        public async Task<IActionResult> ActivityCategories()
         {
-            return await Mediator.Send(new ActivityCategoryList.Query());
+            var result = await Mediator.Send(new ActivityCategoryList.Query());
+            return ProcessResult(result);
         }
     }
 }

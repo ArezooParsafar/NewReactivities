@@ -108,7 +108,7 @@ namespace Application.Services.Identity
 
         public Task<AppUser> FindByIdIncludeUserRolesAsync(string userId)
         {
-            return _users.Include(x => x.Roles).FirstOrDefaultAsync(x => x.Id == userId);
+            return _users.Include(x => x.UserRoles).FirstOrDefaultAsync(x => x.Id == userId);
         }
 
         public Task<List<AppUser>> GetAllUsersAsync()
@@ -231,7 +231,7 @@ namespace Application.Services.Identity
                 });
             }
 
-            var currentUserRoleIds = user.Roles.Select(x => x.RoleId).ToList();
+            var currentUserRoleIds = user.UserRoles.Select(x => x.RoleId).ToList();
 
             if (selectedRoleIds == null)
             {
@@ -241,16 +241,16 @@ namespace Application.Services.Identity
             var newRolesToAdd = selectedRoleIds.Except(currentUserRoleIds).ToList();
             foreach (var roleId in newRolesToAdd)
             {
-                user.Roles.Add(new UserRole { RoleId = roleId, UserId = user.Id });
+                user.UserRoles.Add(new UserRole { RoleId = roleId, UserId = user.Id });
             }
 
             var removedRoles = currentUserRoleIds.Except(selectedRoleIds).ToList();
             foreach (var roleId in removedRoles)
             {
-                var userRole = user.Roles.SingleOrDefault(ur => ur.RoleId == roleId);
+                var userRole = user.UserRoles.SingleOrDefault(ur => ur.RoleId == roleId);
                 if (userRole != null)
                 {
-                    user.Roles.Remove(userRole);
+                    user.UserRoles.Remove(userRole);
                 }
             }
 

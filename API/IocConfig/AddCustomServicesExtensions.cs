@@ -8,6 +8,7 @@ using Application.Util.Photo;
 using AutoMapper;
 using Domain.Identity;
 using Domain.Settings;
+using Infrastructure.Utils;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
@@ -30,24 +31,24 @@ namespace API.IocConfig
     {
         public static IServiceCollection AddCustomServices(this IServiceCollection services)
         {
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IPrincipal>(provider =>
                 provider.GetRequiredService<IHttpContextAccessor>()?.HttpContext?.User ?? ClaimsPrincipal.Current);
 
-           
+
             services.AddScoped<IPasswordValidator<AppUser>, CustomPasswordValidator>();
             services.AddScoped<PasswordValidator<AppUser>, CustomPasswordValidator>();
 
-           
-            
-           
+
+
+
             services.AddScoped<IApplicationUserStore, ApplicationUserStore>();
             services.AddScoped<UserStore<AppUser, Role, ApplicationDbContext, string, UserClaim, UserRole, UserLogin, UserToken, RoleClaim>, ApplicationUserStore>();
 
             services.AddScoped<IApplicationUserManager, ApplicationUserManager>();
             services.AddScoped<UserManager<AppUser>, ApplicationUserManager>();
 
-           
+
             services.AddScoped<IApplicationSignInManager, ApplicationSignInManager>();
             services.AddScoped<SignInManager<AppUser>, ApplicationSignInManager>();
 
@@ -58,12 +59,13 @@ namespace API.IocConfig
             services.AddScoped<ISmsSender, AuthMessageSender>();
 
             services.AddScoped<IUsedPasswordsService, UsedPasswordsService>();
-             services.AddScoped<IAppLogItemsService, AppLogItemsService>();
+            services.AddScoped<IAppLogItemsService, AppLogItemsService>();
 
             services.AddScoped<ISecurityService, SecurityService>();
             services.AddScoped<ITokenFactoryService, TokenFactoryService>();
+            services.AddScoped<ITokenStoreService, TokenStoreService>();
             services.AddScoped<IPhotoAccessor, PhotoAccessor>();
-                        
+            services.AddScoped<IUserAccessor, UserAccessor>();
             return services;
         }
 
@@ -88,15 +90,27 @@ namespace API.IocConfig
         {
             services.AddMediatR(typeof(Create).Assembly);
             services.AddAutoMapper(typeof(ActivityList.Handler));
+
         }
 
-
-        public static void AddCustomJwtBearer(this IServiceCollection services)
+        public static void AddIdentityServices(this IServiceCollection services, SiteSettings settings)
         {
-            var siteSettings = services.GetSiteSettings();
+            services.AddIdentityCore<AppUser>(opt =>
+            {
+                opt.Password.RequireNonAlphanumeric = false;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddSignInManager<SignInManager<AppUser>>();
 
+        }
+        public static void AddCustomJwtBearer(this IServiceCollection services, SiteSettings siteSettings)
+        {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(siteSettings.BearerTokensOptions.Key));
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services.AddAuthentication(x =>
+                {
+                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer(opt =>
                 {
                     opt.TokenValidationParameters = new TokenValidationParameters
@@ -123,7 +137,6 @@ namespace API.IocConfig
                         }
                     };
                 });
-
 
         }
     }

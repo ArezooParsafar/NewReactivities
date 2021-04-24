@@ -7,6 +7,7 @@ namespace Application.ViewModels.ActivityDto
         public Guid ActivityId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
+        public int CategoryId { get; set; }
         public string City { get; set; }
         public string Venue { get; set; }
         public string ImagePath { get; set; }

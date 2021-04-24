@@ -23,10 +23,10 @@ namespace Application.Services.UserHandling
 
         public class Handler : IRequestHandler<Query, ValidatePasswordResult>
         {
-            private readonly IApplicationUserManager _userManager;
+            private readonly UserManager<AppUser> _userManager;
             private readonly IPasswordValidator<AppUser> _passwordValidator;
 
-            public Handler(IApplicationUserManager userManager
+            public Handler(UserManager<AppUser> userManager
                 , IPasswordValidator<AppUser> passwordValidator)
             {
                 _userManager = userManager;

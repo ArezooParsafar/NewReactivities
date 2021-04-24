@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using Application.Services.UserHandling;
 using Application.ViewModels.UserDto;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
     [Route("api/[controller]")]
+    [AllowAnonymous]
     [ApiController]
     public class User : BaseController
     {

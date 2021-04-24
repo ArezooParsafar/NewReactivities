@@ -22,8 +22,7 @@ namespace API
                 .ConfigureLogging((hostingContext, logging)=>
                 {
                     logging.ClearProviders();
-                    logging.ClearProviders();
-
+                   
                     logging.AddDebug();
 
                     if (hostingContext.HostingEnvironment.IsDevelopment())
