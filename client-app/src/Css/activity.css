@@ -1,0 +1,36 @@
+.activity-list .ant-list-item {
+  margin: 20px 0;
+  border: 1px #f0f0f0 solid;
+  -webkit-transition: color 0.2s ease;
+  transition: color 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgba(34, 36, 38, 0.15);
+  border-radius: 0.28571429rem;
+}
+.activity-list .ant-image img {
+  height: 120px;
+  width: 120px;
+}
+
+.activity-list .ant-list-item {
+  padding: 0;
+  display: block;
+}
+.activity-list .ant-divider {
+  margin: 0;
+}
+
+.activity-footer {
+  padding: 15px;
+  background-color: #f9f7f76b;
+}
+
+.activity-footer .ant-divider {
+  margin: 10px;
+}
+.activity-footer .view-activity {
+  text-align: right;
+}
+
+.activity-title {
+  padding: 10px;
+}
